@@ -80,7 +80,7 @@ header {
 
 .navigation .btnLogin-popup:hover {
     background: #fff;
-    color: #bdb1e0;
+    color: #162938;
 }
 
 .wrapper {
@@ -95,11 +95,60 @@ header {
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+    transform: scale(0);
+    transition: transform .5s ease, height .2s ease;
+}
+
+.wrapper.active-popup {
+    transform: scale(1);
+}
+
+.wrapper .icon-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 45px;
+    height: 45px;
+    background-color: #162938;
+    font-size: 2em;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1;
+    border-bottom-left-radius: 20px;
+}
+
+.wrapper.active {
+    height: 520px;
 }
 
 .wrapper .form-box {
     width: 100%;
     padding: 40px;
+}
+
+.wrapper .form-box.login {
+    transition: transform .18s ease;
+    transform: translateX(0);
+}
+
+.wrapper.active .form-box.login {
+    transition: none;
+    transform: translateX(-400px);
+}
+
+.wrapper .form-box.register {
+    position: absolute;
+    transition: none;
+    transform: translateX(400px);
+}
+
+.wrapper.active .form-box.register {
+    transition: transform .18s ease;
+    transform: translateX(0);
 }
 
 .form-box h2 {
@@ -152,6 +201,13 @@ header {
     font-size: 1.2em;
     color: #162938;
     line-height: 57px;
+}
+
+.error-msg {
+    color: #c0392b;
+    font-size: .85em;
+    margin-top: 8px;
+    min-height: 1em;
 }
 
 .remember-forgot {
@@ -209,4 +265,231 @@ header {
 
 .login-register p a:hover {
     text-decoration: underline;
+}
+
+/* ── Main page ── */
+
+body.main-page {
+    display: block;
+    padding-top: 90px;
+    align-items: unset;
+    justify-content: unset;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: 220px 1fr 1.4fr;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 24px 40px;
+}
+
+.area {
+    background: rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 16px;
+    padding: 22px 20px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.area h3 {
+    color: #162938;
+    font-size: 1.1em;
+    font-weight: 700;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(22, 41, 56, 0.18);
+}
+
+/* User area */
+.user-area .user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    padding-top: 8px;
+}
+
+.user-avatar {
+    font-size: 4em;
+    color: #162938;
+}
+
+.user-name {
+    font-size: 1.05em;
+    font-weight: 700;
+    color: #162938;
+}
+
+.user-email {
+    font-size: 0.78em;
+    color: rgba(22, 41, 56, 0.65);
+    word-break: break-all;
+}
+
+/* Subscription area */
+.subscription-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: calc(100vh - 220px);
+    overflow-y: auto;
+}
+
+/* Query area */
+.query-form {
+    margin-bottom: 14px;
+}
+
+.query-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
+    margin-bottom: 8px;
+}
+
+.query-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.query-field label {
+    font-size: 0.82em;
+    font-weight: 600;
+    color: #162938;
+}
+
+.query-field input {
+    height: 38px;
+    border: 2px solid rgba(22, 41, 56, 0.25);
+    border-radius: 8px;
+    padding: 0 10px;
+    font-size: 0.9em;
+    background: rgba(255, 255, 255, 0.6);
+    color: #162938;
+    outline: none;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.query-field input:focus {
+    border-color: #162938;
+}
+
+.query-error {
+    color: #b03a2e;
+    font-size: 0.83em;
+    min-height: 1.2em;
+    margin-bottom: 6px;
+}
+
+.query-btn {
+    width: 100%;
+    height: 42px;
+    margin-top: 4px;
+    border-radius: 8px;
+    font-size: 0.93em;
+}
+
+.query-results {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: calc(100vh - 320px);
+    overflow-y: auto;
+    margin-top: 14px;
+}
+
+/* Song card */
+.song-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    border-radius: 10px;
+    padding: 8px 10px;
+}
+
+.song-img {
+    width: 46px;
+    height: 46px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.song-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.song-title {
+    font-weight: 600;
+    font-size: 0.88em;
+    color: #162938;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.song-artist {
+    font-size: 0.8em;
+    color: rgba(22, 41, 56, 0.78);
+}
+
+.song-album {
+    font-size: 0.74em;
+    color: rgba(22, 41, 56, 0.6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-add,
+.btn-remove {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8em;
+    font-weight: 600;
+    transition: background 0.25s;
+}
+
+.btn-add {
+    background: #162938;
+    color: #fff;
+}
+
+.btn-add:hover:not(:disabled) {
+    background: #0d1b25;
+}
+
+.btn-add:disabled {
+    background: #4a7c59;
+    cursor: default;
+}
+
+.btn-remove {
+    background: #b03a2e;
+    color: #fff;
+}
+
+.btn-remove:hover {
+    background: #922b21;
+}
+
+.empty-msg {
+    color: rgba(22, 41, 56, 0.55);
+    font-size: 0.88em;
+    text-align: center;
+    padding: 24px 0;
 }
