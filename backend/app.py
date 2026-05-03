@@ -32,7 +32,7 @@ def music():
 
 @app.route("/login", methods=["POST"])
 def login():
-    body = request.get_json(force=True)
+    body = request.get_json(silent=True) or {}
 
     result = login_user(
         email=body.get("email"),
@@ -44,7 +44,7 @@ def login():
 
 @app.route("/register", methods=["POST"])
 def register():
-    body = request.get_json(force=True)
+    body = request.get_json(silent=True) or {}
 
     result = register_user(
         email=body.get("email"),
@@ -66,7 +66,7 @@ def subscriptions_get():
 
 @app.route("/subscriptions", methods=["POST"])
 def subscriptions_post():
-    body = request.get_json(force=True)
+    body = request.get_json(silent=True) or {}
 
     result = add_subscription(
         email=body.get("email"),
@@ -78,7 +78,7 @@ def subscriptions_post():
 
 @app.route("/subscriptions", methods=["DELETE"])
 def subscriptions_delete():
-    body = request.get_json(force=True)
+    body = request.get_json(silent=True) or {}
 
     result = remove_subscription(
         email=body.get("email"),

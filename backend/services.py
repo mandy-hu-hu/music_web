@@ -10,7 +10,7 @@ login_table = dynamodb.Table(LOGIN_TABLE)
 subscriptions_table = dynamodb.Table(SUBSCRIPTIONS_TABLE)
 
 def make_song_id(song: dict) -> str:
-    return f"{song.get('title')}#{song.get('artist')}#{song.get('year')}#{song.get('album')}"
+    return f"{song.get('title')}#{song.get('year')}#{song.get('album')}"
 
 
 def success(data=None, status_code=200):
@@ -42,7 +42,7 @@ def add_song_ids(items):
 
 def query_music(title=None, artist=None, year=None, album=None):
     try:
-        # Best case: artist provided, use Query on main table.
+        # Best case: artist and year provided, use LSI for efficient Query.
         if artist and year:
             response = music_table.query(
                 IndexName="artist-year-index",
