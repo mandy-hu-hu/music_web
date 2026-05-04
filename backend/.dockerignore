@@ -1,0 +1,40 @@
+# Secrets / local environment
+.env
+.env.*
+!.env.example
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Git files
+.git/
+.gitignore
+
+# IDE/editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs / temp files
+*.log
+tmp/
+temp/
+
+# Lambda package not needed for ECS image
+lambda_backend/
+lambda_backend.zip
+
+# Local database/test files
+*.sqlite3
+*.db
