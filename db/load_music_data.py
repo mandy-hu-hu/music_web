@@ -8,7 +8,7 @@ TABLE_NAME = "music"
 dynamodb = boto3.resource("dynamodb", region_name=REGION)
 table = dynamodb.Table(TABLE_NAME)
 
-with open("2026a2_songs.json", "r", encoding="utf-8") as file:
+with open("../2026a2_songs.json", "r", encoding="utf-8") as file:
     data = json.load(file)
 
 songs = data["songs"]

@@ -1,4 +1,6 @@
 import boto3
+import json
+
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 
@@ -117,10 +119,34 @@ def login_user(email: str, password: str):
     if not email or not password:
         return error("Email and password are required", 400)
 
-    response = login_table.get_item(Key={"email": email})
-    user = response.get("Item")
+    clean_email = email.strip().lower()
+    clean_password = str(password).strip()
 
-    if not user or user.get("password") != password:
+    response = login_table.scan()
+    items = response.get("Items", [])
+
+    print("ALL USERS:", items)
+    print("INPUT EMAIL:", repr(clean_email))
+
+    user = None
+
+    for u in items:
+        try:
+            parsed = json.loads(u.get("email"))
+
+            print("PARSED:", parsed)
+
+            if parsed.get("email", "").strip().lower() == clean_email:
+                user = parsed
+                break
+
+        except Exception as e:
+            print("PARSE ERROR:", e)    
+
+    print("FOUND USER:", user)
+
+
+    if not user or str(user.get("password")).strip() != clean_password:
         return error("email or password is invalid", 401)
 
     return success({

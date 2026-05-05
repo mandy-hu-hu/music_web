@@ -47,18 +47,36 @@ document.getElementById("registerForm").addEventListener("submit", (e) => {
 });
 
 document.getElementById("loginForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-  const errorMsg = document.getElementById("loginError");
+    e.preventDefault();
 
-  const match = loginTable.find(u => u.email === email && u.password === password);
-  if (match) {
-    errorMsg.textContent = "";
-    sessionStorage.setItem("loggedInEmail", match.email);
-    sessionStorage.setItem("loggedInUsername", match.username || match.email);
-    globalThis.location.href = "main.html";
-  } else {
-    errorMsg.textContent = "Email or password is invalid";
-  }
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    const errorMsg = document.getElementById("loginError");
+
+    fetch("http://100.31.2.68:5000/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("RESPONSE:", data);
+
+        if (data.ok) {
+            errorMsg.textContent = "";
+
+            sessionStorage.setItem("loggedInEmail", data.data.email);
+            sessionStorage.setItem("loggedInUsername", data.data.user_name);
+
+            window.location.href = "main.html";
+        } else {
+            errorMsg.textContent = data.error || "Login failed";
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        errorMsg.textContent = "Server error";
+    });
 });
