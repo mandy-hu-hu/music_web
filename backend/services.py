@@ -44,76 +44,51 @@ def add_song_ids(items):
 
 def query_music(title=None, artist=None, year=None, album=None):
     try:
-        # Best case: artist and year provided, use LSI for efficient Query.
-        if artist and year:
-            response = music_table.query(
-                IndexName="artist-year-index",
-                KeyConditionExpression=Key("artist").eq(artist) & Key("year").eq(str(year))
-            )
+        items = []
 
-            items = response.get("Items", [])
-
+        try:
             if title:
-                items = [x for x in items if x.get("title") == title]
-            if album:
-                items = [x for x in items if x.get("album") == album]
+                response = music_table.query(
+                    IndexName="title-artist-index",
+                    KeyConditionExpression=Key("title").eq(title)
+                )
+                items = response.get("Items", [])
 
-            return success({"items": add_song_ids(items)})
+            elif artist:
+                response = music_table.query(
+                    IndexName="artist-year-index",
+                    KeyConditionExpression=Key("artist").eq(artist)
+                )
+                items = response.get("Items", [])
 
-        if artist:
-            response = music_table.query(
-                KeyConditionExpression=Key("artist").eq(artist)
-            )
+        except Exception as e:
+            print("Query failed, fallback to scan:", e)
 
+        if not items:
+            response = music_table.scan()
             items = response.get("Items", [])
 
-            if title:
-                items = [x for x in items if x.get("title") == title]
-            if album:
-                items = [x for x in items if x.get("album") == album]
+        results = []
 
-            return success({"items": add_song_ids(items)})
+        for item in items:
+            if title and title.lower() not in item.get("title", "").lower():
+                continue
+            if artist and artist.lower() not in item.get("artist", "").lower():
+                continue
+            if year and str(item.get("year", "")) != str(year):
+                continue
+            if album and album.lower() not in item.get("album", "").lower():
+                continue
 
-        # If title provided and your GSI exists, use title-artist-index.
-        if title:
-            response = music_table.query(
-                IndexName="title-artist-index",
-                KeyConditionExpression=Key("title").eq(title)
-            )
+            results.append(item)
 
-            items = response.get("Items", [])
+        return success({"data": results})
 
-            if year:
-                items = [x for x in items if x.get("year") == str(year)]
-            if album:
-                items = [x for x in items if x.get("album") == album]
-
-            return success({"items": add_song_ids(items)})
-
-        # Fallback Scan for year-only or album-only query.
-        conditions = []
-
-        if year:
-            conditions.append(Attr("year").eq(str(year)))
-        if album:
-            conditions.append(Attr("album").eq(album))
-
-        if not conditions:
-            return error("At least one query field is required", 400)
-
-        filter_expr = conditions[0]
-
-        for cond in conditions[1:]:
-            filter_expr = filter_expr & cond
-
-        response = music_table.scan(FilterExpression=filter_expr)
-        items = response.get("Items", [])
-
-        return success({"items": add_song_ids(items)})
-
-    except ClientError as e:
+    except Exception as e:
+        print("ERROR in query_music:", e)
         return error(str(e), 500)
 
+ 
 
 def login_user(email: str, password: str):
     if not email or not password:

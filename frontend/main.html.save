@@ -156,15 +156,15 @@
 
         renderSubscriptions();
 
-       
+        let allSongs = [];
+
         document.getElementById("queryForm").addEventListener("submit", (e) => {
             e.preventDefault();
 
-            const qTitle  = document.getElementById("qTitle").value.trim();
+            const qTitle  = document.getElementById("qTitle").value.trim().toLowerCase();
             const qYear   = document.getElementById("qYear").value.trim();
-            const qArtist = document.getElementById("qArtist").value.trim();
-            const qAlbum  = document.getElementById("qAlbum").value.trim();
-
+            const qArtist = document.getElementById("qArtist").value.trim().toLowerCase();
+            const qAlbum  = document.getElementById("qAlbum").value.trim().toLowerCase();
             const errorEl = document.getElementById("queryError");
             const resultsDiv = document.getElementById("queryResults");
 
@@ -176,40 +176,44 @@
                 return;
             }
 
-            const params = new URLSearchParams({
-                title: qTitle,
-                year: qYear,
-                artist: qArtist,
-                album: qAlbum
-            });
+            const matches = allSongs.filter(s =>
+                (!qTitle  || s.title.toLowerCase().includes(qTitle))  &&
+                (!qYear   || s.year === qYear)                         &&
+                (!qArtist || s.artist.toLowerCase().includes(qArtist)) &&
+                (!qAlbum  || s.album.toLowerCase().includes(qAlbum))
+            );
 
-            fetch(`http://107.21.148.137:5000/music?${params}`)
-                .then(res => res.json())
-                .then(data => {
-                    console.log("BACKEND DATA:", data);
+            if (matches.length === 0) {
+                const msg = document.createElement("p");
+                msg.className = "empty-msg";
+                msg.textContent = "No result is retrieved. Please query again.";
+                resultsDiv.appendChild(msg);
+                return;
+            }
 
-                    if (!data.data || data.data.length === 0) {
-                        resultsDiv.innerHTML = "<p class='empty-msg'>No result is retrieved. Please query again.</p>";
-                        return;
+            matches.forEach(song => {
+                const subs = getSubscriptions();
+                const already = subs.some(s =>
+                    s.title === song.title && s.artist === song.artist && s.album === song.album
+                );
+                const card = makeSongCard(song, already ? "✓ Subscribed" : "Subscribe", function () {
+                    const current = getSubscriptions();
+                    const exists = current.some(s =>
+                        s.title === song.title && s.artist === song.artist && s.album === song.album
+                    );
+                    if (!exists) {
+                        current.push(song);
+                        saveSubscriptions(current);
+                        renderSubscriptions();
+                        this.textContent = "✓ Subscribed";
+                        this.disabled = true;
                     }
-
-                    data.data.forEach(song => {
-                        const card = makeSongCard(song, "Subscribe", function () {
-                            const current = getSubscriptions();
-                            current.push(song);
-                            saveSubscriptions(current);
-                            renderSubscriptions();
-                            this.textContent = "✓ Subscribed";
-                            this.disabled = true;
-                        });
-
-                        resultsDiv.appendChild(card);
-                    });
-                })
-                .catch(err => {
-                    console.error(err);
-                    errorEl.textContent = "Server error";
                 });
+                if (already) {
+                    card.querySelector(".btn-add").disabled = true;
+                }
+                resultsDiv.appendChild(card);
+            });
         });
     </script>
 

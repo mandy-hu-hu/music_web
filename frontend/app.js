@@ -53,7 +53,7 @@ document.getElementById("loginForm").addEventListener("submit", (e) => {
     const password = document.getElementById("loginPassword").value;
     const errorMsg = document.getElementById("loginError");
 
-    fetch("http://100.31.2.68:5000/login", {
+    fetch("http://107.21.148.137:5000/login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
