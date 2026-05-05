@@ -100,7 +100,7 @@
             card.className = "song-card";
 
             const img = document.createElement("img");
-            img.src = song.img_url;
+            img.src = song.img_url + "?t=" + new Date().getTime();
             img.alt = song.artist;
             img.className = "song-img";
 
