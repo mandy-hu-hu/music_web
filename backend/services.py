@@ -92,17 +92,13 @@ def login_user(email: str, password: str):
     user = None
 
     for u in items:
-    db_email = str(u.get("email", "")).strip().lower()
+        db_email = str(u.get("email", "")).strip().lower()
 
-    if db_email == clean_email:
-        user = u
-        break
-
-        except Exception as e:
-            print("PARSE ERROR:", e)    
+        if db_email == clean_email:
+            user = u
+            break
 
     print("FOUND USER:", user)
-
 
     if not user or str(user.get("password")).strip() != clean_password:
         return error("email or password is invalid", 401)
@@ -111,7 +107,6 @@ def login_user(email: str, password: str):
         "email": user.get("email"),
         "user_name": user.get("user_name")
     })
-
 
 def register_user(email: str, user_name: str, password: str):
     if not email or not user_name or not password:
