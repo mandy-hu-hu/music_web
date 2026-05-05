@@ -188,12 +188,12 @@
                 .then(data => {
                     console.log("BACKEND DATA:", data);
 
-                    if (!data.data || data.data.length === 0) {
+                    if (!data.data || !data.data.items || data.data.items.length === 0) {
                         resultsDiv.innerHTML = "<p class='empty-msg'>No result is retrieved. Please query again.</p>";
                         return;
                     }
 
-                    data.data.forEach(song => {
+                    data.data.items.forEach(song => {
                         const card = makeSongCard(song, "Subscribe", function () {
                             const current = getSubscriptions();
                             current.push(song);
