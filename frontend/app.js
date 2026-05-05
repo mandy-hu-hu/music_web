@@ -73,7 +73,7 @@ document.getElementById("loginForm").addEventListener("submit", (e) => {
     const password = document.getElementById("loginPassword").value;
     const errorMsg = document.getElementById("loginError");
 
-    fetch("http://107.21.148.137:5000/login", {
+    fetch("http://100.27.228.95:5000/login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -120,7 +120,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const password = document.getElementById("registerPassword").value;
         const errorMsg = document.getElementById("registerError");
 
-        fetch("http://107.21.148.137:5000/register", {
+        fetch("http://100.27.228.95:5000/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
