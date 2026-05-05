@@ -158,67 +158,42 @@
 
        
         document.getElementById("queryForm").addEventListener("submit", (e) => {
-            e.preventDefault();
-
-            const qTitle  = document.getElementById("qTitle").value.trim();
-            const qYear   = document.getElementById("qYear").value.trim();
-            const qArtist = document.getElementById("qArtist").value.trim();
-            const qAlbum  = document.getElementById("qAlbum").value.trim();
-
-            const errorEl = document.getElementById("queryError");
-            const resultsDiv = document.getElementById("queryResults");
-
-            resultsDiv.innerHTML = "";
-            errorEl.textContent = "";
-
-            if (!qTitle && !qYear && !qArtist && !qAlbum) {
-                errorEl.textContent = "Please fill in at least one field.";
-                return;
-            }
-
-            const params = new URLSearchParams({
-                title: qTitle,
-                year: qYear,
-                artist: qArtist,
-                album: qAlbum
-            });
-
-            fetch(`http://100.27.228.95:5000/music?${params}`)
-                .then(res => res.json())
-                .then(data => {
-                    console.log("BACKEND DATA:", data);
-  
-                    if (!data.ok) {
-                        errorEl.textContent = data.error || "Server error";
-                        return;
-                    }
-
-                   const items = (data.data && data.data.items) ? data.data.items : [];
-
-                   if (items.length === 0) {
-                        resultsDiv.innerHTML = "<p class='empty-msg'>No result is retrieved.</p>";
-                        return;
-                    }
-     
-                    items.forEach(song => {
-                        const card = makeSongCard(song, "Subscribe", function () {
-                            const current = getSubscriptions();
-                            current.push(song);
-                            saveSubscriptions(current);
-                            renderSubscriptions();
-                            this.textContent = "Subscribed";
-                            this.disabled = true;
-                       });
-
-                        resultsDiv.appendChild(card);
+        fetch(`http://100.27.228.95:5000/music?${params}`)
+            .then(res => res.json())
+            .then(data => {
+                console.log("BACKEND DATA:", data);
+        
+                if (!data.ok) {
+                    errorEl.textContent = data.error || "Server error";
+                    return;
+                }
+        
+                const items = (data.data && data.data.items) ? data.data.items : [];
+        
+                if (items.length === 0) {
+                    resultsDiv.innerHTML = "<p class='empty-msg'>No result is retrieved.</p>";
+                    return;
+                }
+        
+                items.forEach(song => {
+                    const card = makeSongCard(song, "Subscribe", function () {
+                        const current = getSubscriptions();
+                        current.push(song);
+                        saveSubscriptions(current);
+                        renderSubscriptions();
+                        this.textContent = "Subscribed";
+                        this.disabled = true;
                     });
-                })
-                .catch(err => {
-                    console.error(err);
-                    errorEl.textContent = "Server error";
-                }); 
-     
+        
+                    resultsDiv.appendChild(card);
                 });
+            })
+            .catch(err => {
+                console.error(err);
+                errorEl.textContent = "Server error";
+            });
+        
+        });  
     </script>
 
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
