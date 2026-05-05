@@ -92,14 +92,11 @@ def login_user(email: str, password: str):
     user = None
 
     for u in items:
-        try:
-            parsed = json.loads(u.get("email"))
+    db_email = str(u.get("email", "")).strip().lower()
 
-            print("PARSED:", parsed)
-
-            if parsed.get("email", "").strip().lower() == clean_email:
-                user = parsed
-                break
+    if db_email == clean_email:
+        user = u
+        break
 
         except Exception as e:
             print("PARSE ERROR:", e)    
