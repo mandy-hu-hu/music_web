@@ -36,58 +36,44 @@ def add_song_ids(items):
 
     for item in items:
         item = dict(item)
+
+        filename = item["artist"].replace(" ", "") + ".jpg"
+
+        item["img_url"] = f"https://rmit-a2-group54-music-images.s3.amazonaws.com/{filename}"
+
         item["song_id"] = make_song_id(item)
+
         result.append(item)
 
     return result
 
-
 def query_music(title=None, artist=None, year=None, album=None):
     try:
-        items = []
+        conditions = []
 
-        try:
-            if title:
-                response = music_table.query(
-                    IndexName="title-artist-index",
-                    KeyConditionExpression=Key("title").eq(title)
-                )
-                items = response.get("Items", [])
+        if title:
+            conditions.append(Attr("title").contains(title))
+        if artist:
+            conditions.append(Attr("artist").contains(artist))
+        if year:
+            conditions.append(Attr("year").eq(str(year)))
+        if album:
+            conditions.append(Attr("album").contains(album))
 
-            elif artist:
-                response = music_table.query(
-                    IndexName="artist-year-index",
-                    KeyConditionExpression=Key("artist").eq(artist)
-                )
-                items = response.get("Items", [])
+        if not conditions:
+            return error("At least one query field is required", 400)
 
-        except Exception as e:
-            print("Query failed, fallback to scan:", e)
+        filter_expr = conditions[0]
+        for cond in conditions[1:]:
+            filter_expr = filter_expr & cond
 
-        if not items:
-            response = music_table.scan()
-            items = response.get("Items", [])
+        response = music_table.scan(FilterExpression=filter_expr)
+        items = response.get("Items", [])
 
-        results = []
+        return success({"items": add_song_ids(items)})
 
-        for item in items:
-            if title and title.lower() not in item.get("title", "").lower():
-                continue
-            if artist and artist.lower() not in item.get("artist", "").lower():
-                continue
-            if year and str(item.get("year", "")) != str(year):
-                continue
-            if album and album.lower() not in item.get("album", "").lower():
-                continue
-
-            results.append(item)
-
-        return success({"data": results})
-
-    except Exception as e:
-        print("ERROR in query_music:", e)
+    except ClientError as e:
         return error(str(e), 500)
-
  
 
 def login_user(email: str, password: str):

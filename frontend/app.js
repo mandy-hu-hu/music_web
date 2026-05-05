@@ -30,20 +30,40 @@ loginLink.addEventListener("click", () => {
 });
 
 document.getElementById("registerForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const username = document.getElementById("registerUsername").value.trim();
-  const email = document.getElementById("registerEmail").value.trim();
-  const password = document.getElementById("registerPassword").value;
-  const errorMsg = document.getElementById("registerError");
+    e.preventDefault();
 
-  const duplicate = loginTable.find(u => u.email === email);
-  if (duplicate) {
-    errorMsg.textContent = "The email already exists";
-  } else {
-    loginTable.push({ username, email, password });
-    errorMsg.textContent = "";
-    wrapper.classList.remove("active");
-  }
+    const username = document.getElementById("registerUsername").value.trim();
+    const email = document.getElementById("registerEmail").value.trim();
+    const password = document.getElementById("registerPassword").value;
+    const errorMsg = document.getElementById("registerError");
+
+    fetch("http://107.21.148.137:5000/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            email: email,
+            user_name: username,
+            password: password
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("REGISTER RESPONSE:", data);
+
+        if (data.ok) {
+            errorMsg.textContent = "";
+            alert("Register success!");
+            wrapper.classList.remove("active");
+        } else {
+            errorMsg.textContent = data.error || "Register failed";
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        errorMsg.textContent = "Server error";
+    });
 });
 
 document.getElementById("loginForm").addEventListener("submit", (e) => {
@@ -79,4 +99,53 @@ document.getElementById("loginForm").addEventListener("submit", (e) => {
         console.error(err);
         errorMsg.textContent = "Server error";
     });
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+
+    const form = document.getElementById("registerForm");
+
+    if (!form) {
+        console.log(" registerForm not found");
+        return;
+    }
+
+    console.log("registerForm loaded");
+
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById("registerUsername").value.trim();
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value;
+        const errorMsg = document.getElementById("registerError");
+
+        fetch("http://107.21.148.137:5000/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: email,
+                user_name: username,
+                password: password
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            console.log("REGISTER RESPONSE:", data);
+
+            if (data.ok) {
+                errorMsg.textContent = "";
+                alert("Register success!");
+            } else {
+                errorMsg.textContent = data.error || "Register failed";
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            errorMsg.textContent = "Server error";
+        });
+    });
+
 });
