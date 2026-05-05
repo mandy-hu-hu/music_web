@@ -158,42 +158,62 @@
 
        
         document.getElementById("queryForm").addEventListener("submit", (e) => {
-        fetch(`http://100.27.228.95:5000/music?${params}`)
-            .then(res => res.json())
-            .then(data => {
-                console.log("BACKEND DATA:", data);
+            e.preventDefault();
         
-                if (!data.ok) {
-                    errorEl.textContent = data.error || "Server error";
-                    return;
-                }
+            const title = document.getElementById("qTitle").value;
+            const artist = document.getElementById("qArtist").value;
+            const year = document.getElementById("qYear").value;
+            const album = document.getElementById("qAlbum").value;
         
-                const items = (data.data && data.data.items) ? data.data.items : [];
-        
-                if (items.length === 0) {
-                    resultsDiv.innerHTML = "<p class='empty-msg'>No result is retrieved.</p>";
-                    return;
-                }
-        
-                items.forEach(song => {
-                    const card = makeSongCard(song, "Subscribe", function () {
-                        const current = getSubscriptions();
-                        current.push(song);
-                        saveSubscriptions(current);
-                        renderSubscriptions();
-                        this.textContent = "Subscribed";
-                        this.disabled = true;
-                    });
-        
-                    resultsDiv.appendChild(card);
-                });
-            })
-            .catch(err => {
-                console.error(err);
-                errorEl.textContent = "Server error";
+            const params = new URLSearchParams({
+                title,
+                artist,
+                year,
+                album
             });
         
-        });  
+            const resultsDiv = document.getElementById("queryResults");
+            const errorEl = document.getElementById("queryError");
+        
+            resultsDiv.innerHTML = "";
+            errorEl.textContent = "";
+        
+            fetch(`http://100.27.228.95:5000/music?${params}`)
+                .then(res => res.json())
+                .then(data => {
+                    console.log("BACKEND DATA:", data);
+        
+                    if (!data.ok) {
+                        errorEl.textContent = data.error || "Server error";
+                        return;
+                    }
+        
+                    const items = data.data?.items || [];
+        
+                    if (items.length === 0) {
+                        resultsDiv.innerHTML = "<p class='empty-msg'>No result is retrieved.</p>";
+                        return;
+                    }
+        
+                    items.forEach(song => {
+                        const card = makeSongCard(song, "Subscribe", function () {
+                            const current = getSubscriptions();
+                            current.push(song);
+                            saveSubscriptions(current);
+                            renderSubscriptions();
+                            this.textContent = "Subscribed";
+                            this.disabled = true;
+                        });
+        
+                        resultsDiv.appendChild(card);
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    errorEl.textContent = "Server error";
+                });
+        });
+
     </script>
 
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
