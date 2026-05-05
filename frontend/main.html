@@ -100,9 +100,16 @@
             card.className = "song-card";
 
             const img = document.createElement("img");
-            img.src = song.img_url || song.image_url;
-            img.alt = song.artist;
-            img.className = "song-img";
+
+	    img.src = song.img_url || song.image_url;
+
+	    img.onerror = () => {
+	        img.src = song.image_url;
+	    };
+
+	    img.alt = song.artist;
+    	    img.className = "song-img";
+
 
             const info = document.createElement("div");
             info.className = "song-info";
@@ -182,7 +189,8 @@
                 .then(res => res.json())
                 .then(data => {
                     console.log("BACKEND DATA:", data);
-        
+		    console.log("ITEMS:", data.data.items);        
+
                     if (!data.ok) {
                         errorEl.textContent = data.error || "Server error";
                         return;
@@ -196,6 +204,7 @@
                     }
         
                     items.forEach(song => {
+			console.log("SONG:", song); 
                         const card = makeSongCard(song, "Subscribe", function () {
                             const current = getSubscriptions();
                             current.push(song);
