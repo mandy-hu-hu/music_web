@@ -189,7 +189,7 @@
                 .then(res => res.json())
                 .then(data => {
                     console.log("BACKEND DATA:", data);
-		    console.log("ITEMS:", data.data.items);        
+		    console.log("ITEMS:", data.items);        
 
                     if (!data.ok) {
                         errorEl.textContent = data.error || "Server error";
