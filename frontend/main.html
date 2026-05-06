@@ -68,7 +68,9 @@
 
     </main>
 
-    <script>
+    <script type="module">
+        const API = "https://exb2yo4udg.execute-api.us-east-1.amazonaws.com/prod";
+
         const email = sessionStorage.getItem("loggedInEmail");
         const username = sessionStorage.getItem("loggedInUsername");
         if (!email) {
@@ -85,31 +87,15 @@
             globalThis.location.href = "index.html?showLogin=true";
         });
 
-        const subKey = "subscriptions_" + email;
-
-        function getSubscriptions() {
-            return JSON.parse(localStorage.getItem(subKey) || "[]");
-        }
-
-        function saveSubscriptions(subs) {
-            localStorage.setItem(subKey, JSON.stringify(subs));
-        }
-
         function makeSongCard(song, actionLabel, onAction) {
             const card = document.createElement("div");
             card.className = "song-card";
 
             const img = document.createElement("img");
-
-	    img.src = song.img_url || song.image_url;
-
-	    img.onerror = () => {
-	        img.src = song.image_url;
-	    };
-
-	    img.alt = song.artist;
-    	    img.className = "song-img";
-
+            img.src = song.img_url || song.image_url;
+            img.onerror = () => { img.src = song.image_url; };
+            img.alt = song.artist;
+            img.className = "song-img";
 
             const info = document.createElement("div");
             info.className = "song-info";
@@ -137,89 +123,109 @@
             return card;
         }
 
-        function renderSubscriptions() {
+        async function renderSubscriptions() {
             const list = document.getElementById("subscriptionList");
-            const subs = getSubscriptions();
-            list.innerHTML = "";
+            list.innerHTML = "<p class='empty-msg'>Loading...</p>";
 
-            if (subs.length === 0) {
-                const msg = document.createElement("p");
-                msg.className = "empty-msg";
-                msg.textContent = "No subscriptions yet.";
-                list.appendChild(msg);
-                return;
-            }
+            try {
+                const res = await fetch(`${API}/subscriptions?email=${encodeURIComponent(email)}`);
+                const raw = await res.json();
+                const data = raw.body ? JSON.parse(raw.body) : raw;
 
-            subs.forEach((song, i) => {
-                const card = makeSongCard(song, "Remove", () => {
-                    const current = getSubscriptions();
-                    current.splice(i, 1);
-                    saveSubscriptions(current);
-                    renderSubscriptions();
+                list.innerHTML = "";
+
+                if (!data.ok) {
+                    list.innerHTML = "<p class='empty-msg'>Failed to load subscriptions.</p>";
+                    return;
+                }
+
+                const subs = data.data?.items || [];
+
+                if (subs.length === 0) {
+                    const msg = document.createElement("p");
+                    msg.className = "empty-msg";
+                    msg.textContent = "No subscriptions yet.";
+                    list.appendChild(msg);
+                    return;
+                }
+
+                subs.forEach(song => {
+                    const card = makeSongCard(song, "Remove", async () => {
+                        await fetch(`${API}/subscriptions`, {
+                            method: "DELETE",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ email, song_id: song.song_id })
+                        });
+                        renderSubscriptions();
+                    });
+                    list.appendChild(card);
                 });
-                list.appendChild(card);
-            });
+            } catch (err) {
+                console.error(err);
+                list.innerHTML = "<p class='empty-msg'>Error loading subscriptions.</p>";
+            }
         }
 
-        renderSubscriptions();
+        await renderSubscriptions();
 
-       
         document.getElementById("queryForm").addEventListener("submit", (e) => {
             e.preventDefault();
-        
+
             const title = document.getElementById("qTitle").value;
             const artist = document.getElementById("qArtist").value;
             const year = document.getElementById("qYear").value;
             const album = document.getElementById("qAlbum").value;
-        
-            const params = new URLSearchParams({
-                title,
-                artist,
-                year,
-                album
-            });
-        
+
+            const params = new URLSearchParams({ title, artist, year, album });
+
             const resultsDiv = document.getElementById("queryResults");
             const errorEl = document.getElementById("queryError");
-        
+
             resultsDiv.innerHTML = "";
             errorEl.textContent = "";
-        
-			fetch(`https://exb2yo4udg.execute-api.us-east-1.amazonaws.com/prod/music?${params}`)
-			    .then(res => res.json())
-			    .then(raw => {
-			
-			        console.log("RAW:", raw);
-			
-			        const data = raw.body ? JSON.parse(raw.body) : raw;
-			
-			        console.log("PARSED:", data);
-			
-			        if (!data.ok) {
-			            errorEl.textContent = data.error || "Server error";
-			            return;
-			        }
-			
-			        const items = data.data?.items || [];
-			
-			        if (items.length === 0) {
-			            resultsDiv.innerHTML = "<p class='empty-msg'>No result is retrieved.</p>";
-			            return;
-			        }
-			
-			        items.forEach(song => {
-			            const card = makeSongCard(song, "Subscribe", function () {
-			                const current = getSubscriptions();
-			                current.push(song);
-			                saveSubscriptions(current);
-			                renderSubscriptions();
-			                this.textContent = "Subscribed";
-			                this.disabled = true;
-			            });
-			
-			            resultsDiv.appendChild(card);
-			        });
-			    })
+
+            fetch(`${API}/music?${params}`)
+                .then(res => res.json())
+                .then(raw => {
+                    console.log("RAW:", raw);
+                    const data = raw.body ? JSON.parse(raw.body) : raw;
+                    console.log("PARSED:", data);
+
+                    if (!data.ok) {
+                        errorEl.textContent = data.error || "Server error";
+                        return;
+                    }
+
+                    const items = data.data?.items || [];
+
+                    if (items.length === 0) {
+                        resultsDiv.innerHTML = "<p class='empty-msg'>No result is retrieved.</p>";
+                        return;
+                    }
+
+                    items.forEach(song => {
+                        const card = makeSongCard(song, "Subscribe", async function () {
+                            this.textContent = "Subscribing...";
+                            this.disabled = true;
+                            const r = await fetch(`${API}/subscriptions`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ email, song })
+                            });
+                            const rRaw = await r.json();
+                            const rData = rRaw.body ? JSON.parse(rRaw.body) : rRaw;
+                            if (rData.ok) {
+                                this.textContent = "Subscribed";
+                                renderSubscriptions();
+                            } else {
+                                this.textContent = "Subscribe";
+                                this.disabled = false;
+                            }
+                        });
+
+                        resultsDiv.appendChild(card);
+                    });
+                })
                 .catch(err => {
                     console.error(err);
                     errorEl.textContent = "Server error";
@@ -230,7 +236,6 @@
 
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-
 
 </body>
 
