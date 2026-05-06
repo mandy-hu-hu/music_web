@@ -2,12 +2,20 @@ import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 
-from config import AWS_REGION, MUSIC_TABLE, LOGIN_TABLE, SUBSCRIPTIONS_TABLE
+from config import (
+    AWS_REGION,
+    MUSIC_TABLE,
+    LOGIN_TABLE,
+    SUBSCRIPTIONS_TABLE,
+    S3_BUCKET,
+    PRESIGNED_URL_EXPIRES
+)
 
 dynamodb = boto3.resource("dynamodb", region_name=AWS_REGION)
 music_table = dynamodb.Table(MUSIC_TABLE)
 login_table = dynamodb.Table(LOGIN_TABLE)
 subscriptions_table = dynamodb.Table(SUBSCRIPTIONS_TABLE)
+s3 = boto3.client("s3", region_name=AWS_REGION)
 
 def make_song_id(song: dict) -> str:
     return f"{song.get('title')}#{song.get('year')}#{song.get('album')}"
@@ -37,7 +45,7 @@ def add_song_ids(items):
         item["song_id"] = make_song_id(item)
         result.append(item)
 
-    return result
+    return add_presigned_image_urls(result)
 
 
 def query_music(title=None, artist=None, year=None, album=None):
@@ -183,7 +191,10 @@ def get_subscriptions(email: str):
         KeyConditionExpression=Key("email").eq(email)
     )
 
-    return success({"items": response.get("Items", [])})
+    items = response.get("Items", [])
+    items = add_presigned_image_urls(items)
+
+    return success({"items": items})
 
 
 def add_subscription(email: str, song: dict):
@@ -208,7 +219,7 @@ def add_subscription(email: str, song: dict):
         "artist": song.get("artist"),
         "year": str(song.get("year")),
         "album": song.get("album"),
-        "img_url": song.get("img_url") or song.get("image_url", "")
+        "image_key": get_image_key(song)
     }
 
     subscriptions_table.put_item(Item=item)
@@ -231,3 +242,43 @@ def remove_subscription(email: str, song_id: str):
     )
 
     return success({"message": "Subscription removed"})
+
+
+def get_image_key(song: dict) -> str:
+    """
+    Converts original dataset image URL into S3 object key.
+    Example:
+    https://raw.githubusercontent.com/.../TaylorSwift.jpg
+    -> TaylorSwift.jpg
+    """
+    if song.get("image_key"):
+        return song["image_key"]
+
+    url = song.get("img_url") or song.get("image_url") or ""
+    return url.split("/")[-1] if url else ""
+
+
+def add_presigned_image_urls(items):
+    result = []
+
+    for item in items:
+        item = dict(item)
+
+        image_key = get_image_key(item)
+        item["image_key"] = image_key
+
+        if image_key:
+            item["img_url"] = s3.generate_presigned_url(
+                "get_object",
+                Params={
+                    "Bucket": S3_BUCKET,
+                    "Key": image_key,
+                },
+                ExpiresIn=PRESIGNED_URL_EXPIRES,
+            )
+        else:
+            item["img_url"] = ""
+
+        result.append(item)
+
+    return result
