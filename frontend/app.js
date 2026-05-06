@@ -4,10 +4,6 @@ const registerLink = document.querySelector(".register-link");
 const btnPopup = document.querySelector(".btnLogin-popup");
 const iconClose = document.querySelector(".icon-close");
 
-const loginTable = [
-  { username: "User", email: "user@example.com", password: "password123" },
-  { username: "Admin", email: "admin@musicweb.com", password: "admin2024" }
-];
 
 btnPopup.addEventListener("click", () => {
   wrapper.classList.add("active-popup");
@@ -54,6 +50,7 @@ document.getElementById("registerForm").addEventListener("submit", (e) => {
 
         if (data.ok) {
             errorMsg.textContent = "";
+            document.getElementById("registerForm").reset();
             alert("Register success!");
             wrapper.classList.remove("active");
         } else {
@@ -101,7 +98,7 @@ document.getElementById("loginForm").addEventListener("submit", (e) => {
     });
 });
 
-window.addEventListener("DOMContentLoaded", () => {
+/*window.addEventListener("DOMContentLoaded", () => {
 
     const form = document.getElementById("registerForm");
 
@@ -148,4 +145,4 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-});
+});*/
