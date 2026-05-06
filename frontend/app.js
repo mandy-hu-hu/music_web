@@ -37,7 +37,7 @@ document.getElementById("registerForm").addEventListener("submit", (e) => {
     const password = document.getElementById("registerPassword").value;
     const errorMsg = document.getElementById("registerError");
 
-    fetch("http://107.21.148.137:5000/register", {
+    fetch("https://exb2yo4udg.execute-api.us-east-1.amazonaws.com/prod/register", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -73,7 +73,7 @@ document.getElementById("loginForm").addEventListener("submit", (e) => {
     const password = document.getElementById("loginPassword").value;
     const errorMsg = document.getElementById("loginError");
 
-    fetch("http://100.27.228.95:5000/login", {
+    fetch("https://exb2yo4udg.execute-api.us-east-1.amazonaws.com/prod/login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -120,7 +120,7 @@ window.addEventListener("DOMContentLoaded", () => {
         const password = document.getElementById("registerPassword").value;
         const errorMsg = document.getElementById("registerError");
 
-        fetch("http://100.27.228.95:5000/register", {
+        fetch("https://exb2yo4udg.execute-api.us-east-1.amazonaws.com/prod/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
