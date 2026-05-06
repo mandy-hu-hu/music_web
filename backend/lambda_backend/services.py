@@ -42,72 +42,95 @@ def add_song_ids(items):
 
 def query_music(title=None, artist=None, year=None, album=None):
     try:
-        # Best case: artist and year provided, use LSI for efficient Query.
+        title = title.strip() if title else None
+        artist = artist.strip() if artist else None
+        year = str(year).strip() if year else None
+        album = album.strip() if album else None
+
+        if not title and not artist and not year and not album:
+            return error("At least one query field is required", 400)
+
+        # 1. Artist + year -> use LSI
         if artist and year:
             response = music_table.query(
                 IndexName="artist-year-index",
-                KeyConditionExpression=Key("artist").eq(artist) & Key("year").eq(str(year))
+                KeyConditionExpression=Key("artist").eq(artist) & Key("year").eq(year)
             )
-
             items = response.get("Items", [])
+            strategy = "Query using LSI artist-year-index"
 
-            if title:
-                items = [x for x in items if x.get("title") == title]
-            if album:
-                items = [x for x in items if x.get("album") == album]
-
-            return success({"items": add_song_ids(items)})
-
-        if artist:
+        # 2. Artist -> use base table Query
+        elif artist:
             response = music_table.query(
                 KeyConditionExpression=Key("artist").eq(artist)
             )
-
             items = response.get("Items", [])
+            strategy = "Query using base table artist key"
 
-            if title:
-                items = [x for x in items if x.get("title") == title]
-            if album:
-                items = [x for x in items if x.get("album") == album]
-
-            return success({"items": add_song_ids(items)})
-
-        # If title provided and your GSI exists, use title-artist-index.
-        if title:
+        # 3. Title -> use GSI
+        elif title:
             response = music_table.query(
                 IndexName="title-artist-index",
                 KeyConditionExpression=Key("title").eq(title)
             )
-
             items = response.get("Items", [])
+            strategy = "Query using GSI title-artist-index"
+
+        # 4. Album only / year only -> Scan
+        else:
+            conditions = []
 
             if year:
-                items = [x for x in items if x.get("year") == str(year)]
+                conditions.append(Attr("year").eq(year))
             if album:
-                items = [x for x in items if x.get("album") == album]
+                conditions.append(Attr("album").contains(album))
 
-            return success({"items": add_song_ids(items)})
+            filter_expr = conditions[0]
+            for cond in conditions[1:]:
+                filter_expr = filter_expr & cond
 
-        # Fallback Scan for year-only or album-only query.
-        conditions = []
+            response = music_table.scan(FilterExpression=filter_expr)
+            items = response.get("Items", [])
+            strategy = "Scan for non-key search"
 
+        # Apply remaining AND filters after Query
+        if title:
+            items = [i for i in items if title.lower() in i.get("title", "").lower()]
+        if artist:
+            items = [i for i in items if artist.lower() in i.get("artist", "").lower()]
         if year:
-            conditions.append(Attr("year").eq(str(year)))
+            items = [i for i in items if str(i.get("year")) == year]
         if album:
-            conditions.append(Attr("album").eq(album))
+            items = [i for i in items if album.lower() in i.get("album", "").lower()]
 
-        if not conditions:
-            return error("At least one query field is required", 400)
+        # Fallback Scan for partial searches where exact Query found nothing
+        # Example: "Taylor" instead of "Taylor Swift"
+        if not items and (artist or title):
+            conditions = []
 
-        filter_expr = conditions[0]
+            if title:
+                conditions.append(Attr("title").contains(title))
+            if artist:
+                conditions.append(Attr("artist").contains(artist))
+            if year:
+                conditions.append(Attr("year").eq(year))
+            if album:
+                conditions.append(Attr("album").contains(album))
 
-        for cond in conditions[1:]:
-            filter_expr = filter_expr & cond
+            filter_expr = conditions[0]
+            for cond in conditions[1:]:
+                filter_expr = filter_expr & cond
 
-        response = music_table.scan(FilterExpression=filter_expr)
-        items = response.get("Items", [])
+            response = music_table.scan(FilterExpression=filter_expr)
+            items = response.get("Items", [])
 
-        return success({"items": add_song_ids(items)})
+            strategy = strategy + " then fallback Scan for partial/no exact match"
+
+        return success({
+            "items": add_song_ids(items),
+            "count": len(items),
+            "strategy": strategy
+        })
 
     except ClientError as e:
         return error(str(e), 500)
