@@ -5,7 +5,15 @@ from flask_cors import CORS
 from services import query_music, login_user, register_user, get_subscriptions, add_subscription, remove_subscription
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "http://rmit-a2-group54-music-web.s3-website-us-east-1.amazonaws.com"
+        ],
+        "methods": ["GET", "POST", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 
 def send(result):
