@@ -92,9 +92,20 @@
             card.className = "song-card";
 
             const img = document.createElement("img");
-            img.src = song.img_url || song.image_url;
-            img.onerror = () => { img.src = song.image_url; };
-            img.alt = song.artist;
+            const imageUrl = song.img_url || song.image_url || "";
+
+            if (imageUrl) {
+                img.src = imageUrl;
+            } else {
+                img.style.display = "none";
+            }
+
+            img.onerror = () => {
+                console.warn("Image failed to load:", imageUrl);
+                img.style.display = "none";
+            };
+
+            img.alt = song.artist || "artist image";
             img.className = "song-img";
 
             const info = document.createElement("div");
@@ -151,12 +162,32 @@
 
                 subs.forEach(song => {
                     const card = makeSongCard(song, "Remove", async () => {
-                        await fetch(`${API}/subscriptions`, {
+                        const res = await fetch(`${API}/subscriptions`, {
                             method: "DELETE",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ email, song_id: song.song_id })
                         });
-                        renderSubscriptions();
+
+                        const raw = await res.json();
+                        const data = raw.body ? JSON.parse(raw.body) : raw;
+
+                        if (!res.ok || !data.ok) {
+                            alert(data.error || "Remove failed");
+                            return;
+                        }
+
+                        await renderSubscriptions();
+
+                        // Re-run the current query so the query result buttons refresh
+                        const hasQuery =
+                            document.getElementById("qTitle").value.trim() ||
+                            document.getElementById("qYear").value.trim() ||
+                            document.getElementById("qArtist").value.trim() ||
+                            document.getElementById("qAlbum").value.trim();
+
+                        if (hasQuery) {
+                            document.getElementById("queryForm").requestSubmit();
+                        }
                     });
                     list.appendChild(card);
                 });
@@ -199,27 +230,53 @@
                     const items = data.data?.items || [];
 
                     if (items.length === 0) {
-                        resultsDiv.innerHTML = "<p class='empty-msg'>No result is retrieved.</p>";
+                        resultsDiv.innerHTML = "<p class='empty-msg'>No result is retrieved. Please query again</p>";
                         return;
                     }
 
                     items.forEach(song => {
                         const card = makeSongCard(song, "Subscribe", async function () {
-                            this.textContent = "Subscribing...";
-                            this.disabled = true;
-                            const r = await fetch(`${API}/subscriptions`, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ email, song })
-                            });
-                            const rRaw = await r.json();
-                            const rData = rRaw.body ? JSON.parse(rRaw.body) : rRaw;
-                            if (rData.ok) {
-                                this.textContent = "Subscribed";
-                                renderSubscriptions();
-                            } else {
-                                this.textContent = "Subscribe";
-                                this.disabled = false;
+                            const btn = this;
+
+                            const payload = {
+                                email: email,
+                                song: {
+                                    song_id: song.song_id,
+                                    title: song.title,
+                                    artist: song.artist,
+                                    year: song.year,
+                                    album: song.album,
+                                    image_key: song.image_key || ""
+                                }
+                            };
+
+                            btn.textContent = "Subscribing...";
+                            btn.disabled = true;
+
+                            try {
+                                const r = await fetch(`${API}/subscriptions`, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify(payload)
+                                });
+
+                                const rRaw = await r.json();
+
+                                const rData = rRaw.body ? JSON.parse(rRaw.body) : rRaw;
+
+                                if (r.ok && rData.ok) {
+                                    btn.textContent = "Subscribed";
+                                    await renderSubscriptions();
+                                } else {
+                                    btn.textContent = "Subscribe";
+                                    btn.disabled = false;
+                                    alert(rData.error || "Subscribe failed");
+                                }
+                            } catch (err) {
+                                console.error("SUBSCRIBE REQUEST ERROR:", err);
+                                btn.textContent = "Subscribe";
+                                btn.disabled = false;
+                                alert("Subscribe request failed.");
                             }
                         });
 
