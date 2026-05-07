@@ -6,13 +6,13 @@ from services import (
     register_user,
     get_subscriptions,
     add_subscription,
-    remove_subscription,
+    remove_subscription
 )
 
 
 CORS_HEADERS = {
     "Access-Control-Allow-Headers": "Content-Type",
-    "Access-Control-Allow-Origin": "*",  # Replace with S3/CloudFront URL for final security
+    "Access-Control-Allow-Origin": "http://rmit-a2-group54-music-web.s3-website-us-east-1.amazonaws.com",  # S3 frontend URL
     "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
 }
 
@@ -36,8 +36,13 @@ def parse_body(event):
 
 
 def lambda_handler(event, context):
+
+    print("EVENT RAW")
+    print(event)
+
     method = event.get("httpMethod", "")
     path = event.get("path", "")
+
     query = event.get("queryStringParameters") or {}
     body = parse_body(event)
 
