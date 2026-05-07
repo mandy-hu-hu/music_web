@@ -111,28 +111,36 @@ def query_music(title=None, artist=None, year=None, album=None):
         if album:
             items = [i for i in items if album.lower() in i.get("album", "").lower()]
 
-        # Fallback Scan for partial searches where exact Query found nothing
-        # Example: "Taylor" instead of "Taylor Swift"
-        if not items and (artist or title):
+        # Fallback Scan for case-insensitive / partial searches where exact Query found nothing.
+        if not items and (artist or title or album):
             conditions = []
 
-            if title:
-                conditions.append(Attr("title").contains(title))
-            if artist:
-                conditions.append(Attr("artist").contains(artist))
+            # Keep year filter in DynamoDB because year is exact and case is not an issue
             if year:
                 conditions.append(Attr("year").eq(year))
-            if album:
-                conditions.append(Attr("album").contains(album))
 
-            filter_expr = conditions[0]
-            for cond in conditions[1:]:
-                filter_expr = filter_expr & cond
+            if conditions:
+                filter_expr = conditions[0]
+                for cond in conditions[1:]:
+                    filter_expr = filter_expr & cond
 
-            response = music_table.scan(FilterExpression=filter_expr)
+                response = music_table.scan(FilterExpression=filter_expr)
+            else:
+                response = music_table.scan()
+
             items = response.get("Items", [])
 
-            strategy = strategy + " then fallback Scan for partial/no exact match"
+            # Apply case-insensitive matching in Python
+            if title:
+                items = [i for i in items if title.lower() in i.get("title", "").lower()]
+            if artist:
+                items = [i for i in items if artist.lower() in i.get("artist", "").lower()]
+            if year:
+                items = [i for i in items if str(i.get("year")) == year]
+            if album:
+                items = [i for i in items if album.lower() in i.get("album", "").lower()]
+
+            strategy = strategy + " then fallback Scan with Python case-insensitive filter"
 
         return success({
             "items": add_song_ids(items),

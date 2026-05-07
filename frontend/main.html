@@ -202,10 +202,10 @@
         document.getElementById("queryForm").addEventListener("submit", (e) => {
             e.preventDefault();
 
-            const title = document.getElementById("qTitle").value;
-            const artist = document.getElementById("qArtist").value;
-            const year = document.getElementById("qYear").value;
-            const album = document.getElementById("qAlbum").value;
+            const title = document.getElementById("qTitle").value.trim();
+            const artist = document.getElementById("qArtist").value.trim();
+            const year = document.getElementById("qYear").value.trim();
+            const album = document.getElementById("qAlbum").value.trim();
 
             const params = new URLSearchParams({ title, artist, year, album });
 
