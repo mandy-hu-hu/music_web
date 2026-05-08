@@ -98,7 +98,7 @@
             e.preventDefault();
             sessionStorage.removeItem("loggedInEmail");
             sessionStorage.removeItem("loggedInUsername");
-            globalThis.location.href = "index.html?showLogin=true";
+            globalThis.location.replace("index.html?showLogin=true");
         });
 
         function makeSongCard(song, actionLabel, onAction) {

@@ -96,7 +96,7 @@ const BACKENDS = {
               sessionStorage.setItem("loggedInEmail", data.data.email);
               sessionStorage.setItem("loggedInUsername", data.data.user_name);
   
-              window.location.href = "main.html";
+              window.location.replace("main.html");
           } else {
               errorMsg.textContent = data.error || "Login failed";
           }
