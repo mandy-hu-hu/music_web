@@ -80,6 +80,13 @@
 
         const email = sessionStorage.getItem("loggedInEmail");
         const username = sessionStorage.getItem("loggedInUsername");
+
+        let subscribedIds = new Set();
+
+        function songKey(song) {
+            return song.song_id || `${song.title}#${song.year}#${song.album}`;
+        }
+
         if (!email) {
             globalThis.location.replace("index.html");
         }
@@ -158,6 +165,7 @@
                 }
 
                 const subs = data.data?.items || [];
+                subscribedIds = new Set(subs.map(songKey));
 
                 if (subs.length === 0) {
                     const msg = document.createElement("p");
@@ -242,13 +250,19 @@
                     }
 
                     items.forEach(song => {
-                        const card = makeSongCard(song, "Subscribe", async function () {
+                        const alreadySubscribed = subscribedIds.has(songKey(song));
+
+                        const card = makeSongCard(song, alreadySubscribed ? "Subscribed" : "Subscribe", async function () {
                             const btn = this;
+
+                            if (subscribedIds.has(songKey(song))) {
+                                return;
+                            }
 
                             const payload = {
                                 email: email,
                                 song: {
-                                    song_id: song.song_id,
+                                    song_id: songKey(song),
                                     title: song.title,
                                     artist: song.artist,
                                     year: song.year,
@@ -286,6 +300,11 @@
                                 alert("Subscribe request failed.");
                             }
                         });
+
+                        if (alreadySubscribed) {
+                            const addButton = card.querySelector(".btn-add");
+                            if (addButton) addButton.disabled = true;
+                        }
 
                         resultsDiv.appendChild(card);
                     });
