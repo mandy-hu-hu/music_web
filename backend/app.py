@@ -2,7 +2,14 @@ import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from services import query_music, login_user, register_user, get_subscriptions, add_subscription, remove_subscription
+from backend.services import (
+    query_music,
+    login_user,
+    register_user,
+    get_subscriptions,
+    add_subscription,
+    remove_subscription
+)
 
 app = Flask(__name__)
 CORS(app, resources={
