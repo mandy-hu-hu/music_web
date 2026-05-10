@@ -1,0 +1,8 @@
+{
+  "testEnvironment": "jsdom",
+  "testMatch": ["**/tests/frontend/**/*.test.js"],
+  "transform": {
+    "^.+\\.js$": "babel-jest"
+  },
+  "transformIgnorePatterns": []
+}
