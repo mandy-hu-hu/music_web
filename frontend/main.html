@@ -72,12 +72,12 @@
         import { songKey, makeSongCard } from "./utils.js";
 
         const BACKENDS = {
-            ec2: "http://ec2-98-88-20-67.compute-1.amazonaws.com",
+            ec2: "http://ec2-3-91-187-18.compute-1.amazonaws.com",
             ecs: "http://music-alb-1834554723.us-east-1.elb.amazonaws.com",
             lambda: "https://exb2yo4udg.execute-api.us-east-1.amazonaws.com/prod"
         };
 
-        const ACTIVE_BACKEND = "ecs";
+        const ACTIVE_BACKEND = sessionStorage.getItem("activeBackend") || "lambda";
         const API = BACKENDS[ACTIVE_BACKEND];
 
         const email = sessionStorage.getItem("loggedInEmail");

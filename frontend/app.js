@@ -1,10 +1,14 @@
 const BACKENDS = {
-    ec2: "http://ec2-98-88-20-67.compute-1.amazonaws.com",
+    ec2: "http://ec2-3-91-187-18.compute-1.amazonaws.com",
     ecs: "http://music-alb-1834554723.us-east-1.elb.amazonaws.com",
     lambda: "https://exb2yo4udg.execute-api.us-east-1.amazonaws.com/prod"
   };
   
-  const ACTIVE_BACKEND = "ecs";
+  const urlParams = new URLSearchParams(window.location.search);
+  const ACTIVE_BACKEND = urlParams.get("backend") || "lambda";
+  
+  sessionStorage.setItem("activeBackend", ACTIVE_BACKEND);
+  
   const API = BACKENDS[ACTIVE_BACKEND];
   
   const wrapper = document.querySelector(".wrapper");
