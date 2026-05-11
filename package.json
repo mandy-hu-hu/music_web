@@ -1,0 +1,19 @@
+{
+  "name": "music-web-tests",
+  "version": "1.0.0",
+  "description": "Test suite for music web application",
+  "scripts": {
+    "test:unit": "jest",
+    "test:e2e": "playwright test",
+    "test": "npm run test:unit && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.24.0",
+    "@babel/preset-env": "^7.24.0",
+    "@playwright/test": "^1.44.0",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "serve": "^14.2.0"
+  }
+}

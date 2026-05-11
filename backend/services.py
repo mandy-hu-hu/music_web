@@ -2,7 +2,7 @@ import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 
-from config import (
+from backend.config import (
     AWS_REGION,
     MUSIC_TABLE,
     LOGIN_TABLE,

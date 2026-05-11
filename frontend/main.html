@@ -69,6 +69,8 @@
     </main>
 
     <script type="module">
+        import { songKey, makeSongCard } from "./utils.js";
+
         const BACKENDS = {
             ec2: "http://ec2-98-88-20-67.compute-1.amazonaws.com",
             ecs: "http://music-alb-1834554723.us-east-1.elb.amazonaws.com",
@@ -83,10 +85,6 @@
 
         let subscribedIds = new Set();
 
-        function songKey(song) {
-            return song.song_id || `${song.title}#${song.year}#${song.album}`;
-        }
-
         if (!email) {
             globalThis.location.replace("index.html");
         }
@@ -100,53 +98,6 @@
             sessionStorage.removeItem("loggedInUsername");
             globalThis.location.replace("index.html?showLogin=true");
         });
-
-        function makeSongCard(song, actionLabel, onAction) {
-            const card = document.createElement("div");
-            card.className = "song-card";
-
-            const img = document.createElement("img");
-            const imageUrl = song.img_url || song.image_url || "";
-
-            if (imageUrl) {
-                img.src = imageUrl;
-            } else {
-                img.style.display = "none";
-            }
-
-            img.onerror = () => {
-                console.warn("Image failed to load:", imageUrl);
-                img.style.display = "none";
-            };
-
-            img.alt = song.artist || "artist image";
-            img.className = "song-img";
-
-            const info = document.createElement("div");
-            info.className = "song-info";
-
-            const titleEl = document.createElement("span");
-            titleEl.className = "song-title";
-            titleEl.textContent = song.title;
-
-            const artistEl = document.createElement("span");
-            artistEl.className = "song-artist";
-            artistEl.textContent = song.artist;
-
-            const albumEl = document.createElement("span");
-            albumEl.className = "song-album";
-            albumEl.textContent = song.album + " (" + song.year + ")";
-
-            info.append(titleEl, artistEl, albumEl);
-
-            const btn = document.createElement("button");
-            btn.className = actionLabel === "Remove" ? "btn-remove" : "btn-add";
-            btn.textContent = actionLabel;
-            btn.addEventListener("click", onAction);
-
-            card.append(img, info, btn);
-            return card;
-        }
 
         async function renderSubscriptions() {
             const list = document.getElementById("subscriptionList");
