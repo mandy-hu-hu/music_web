@@ -1,0 +1,33 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+testenv/
+
+# Node
+node_modules/
+
+# Test / coverage outputs
+test-results/
+playwright-report/
+coverage/
+.nyc_output/
+.pytest_cache/
+htmlcov/
+*.lcov
+junit.xml
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Local archives (optional; remove line if you need to commit zips)
+*.zip
